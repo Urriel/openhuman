@@ -1,6 +1,13 @@
 // Command handlers module
 mod commands;
 
+// Core modules
+pub mod db;
+pub mod email;
+pub mod error;
+pub mod keychain;
+pub mod retry;
+
 use commands::greet;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
