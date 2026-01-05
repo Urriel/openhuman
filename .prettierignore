@@ -1,0 +1,2 @@
+# Ignore shadcn-vue generated components
+src/components/ui/**

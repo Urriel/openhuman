@@ -1,0 +1,6 @@
+task_groups:
+  - name: Foundation Setup
+  - name: UI Framework Setup
+  - name: Type Safety & IPC Contract
+  - name: Development Tooling
+  - name: CI/CD & Documentation
