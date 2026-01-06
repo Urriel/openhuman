@@ -46,3 +46,62 @@ export async function invokeGreet(name: string): Promise<GreetResponse> {
   const { invoke } = await import('@tauri-apps/api/core');
   return invoke<GreetResponse>('greet', { name });
 }
+
+// Label Operations Types
+
+export interface Label {
+  id: number;
+  account_id: number;
+  name: string;
+  color?: string;
+  created_at: string;
+  message_count?: number;
+}
+
+export interface CreateLabelRequest {
+  accountId: number;
+  name: string;
+  color?: string;
+}
+
+export interface ListLabelsRequest {
+  accountId: number;
+  includeCounts: boolean;
+}
+
+export interface DeleteLabelRequest {
+  labelId: number;
+}
+
+export interface ApplyLabelRequest {
+  messageId: number;
+  labelId: number;
+}
+
+export interface RemoveLabelRequest {
+  messageId: number;
+  labelId: number;
+}
+
+export interface GetMessageLabelsRequest {
+  messageId: number;
+}
+
+export interface ArchiveMessagesRequest {
+  messageIds: number[];
+}
+
+// Folder Operations Types
+
+export interface Folder {
+  id: number;
+  account_id: number;
+  name: string;
+  message_count: number;
+}
+
+export interface ListFoldersRequest {
+  accountId?: number;
+}
+
+export type ListFoldersResponse = Folder[];

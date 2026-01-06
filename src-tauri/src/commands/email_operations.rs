@@ -120,6 +120,57 @@ pub async fn delete_message(message_id: i64) -> Result<(), String> {
     Ok(())
 }
 
+/// Bulk mark messages as read or unread
+#[tauri::command]
+pub async fn bulk_mark_read(message_ids: Vec<i64>, is_read: bool) -> Result<(), String> {
+    let pool = crate::db::get_pool().await.map_err(|e| e.to_string())?;
+
+    let read_value = if is_read { 1 } else { 0 };
+
+    for message_id in message_ids {
+        sqlx::query("UPDATE messages SET is_read = ? WHERE id = ?")
+            .bind(read_value)
+            .bind(message_id)
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to update message read status: {}", e))?;
+    }
+
+    Ok(())
+}
+
+/// Bulk archive messages (move to Archive folder)
+#[tauri::command]
+pub async fn bulk_archive_messages(message_ids: Vec<i64>) -> Result<(), String> {
+    let pool = crate::db::get_pool().await.map_err(|e| e.to_string())?;
+
+    for message_id in message_ids {
+        sqlx::query("UPDATE messages SET folder = 'Archive' WHERE id = ?")
+            .bind(message_id)
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to archive message: {}", e))?;
+    }
+
+    Ok(())
+}
+
+/// Bulk delete messages
+#[tauri::command]
+pub async fn bulk_delete_messages(message_ids: Vec<i64>) -> Result<(), String> {
+    let pool = crate::db::get_pool().await.map_err(|e| e.to_string())?;
+
+    for message_id in message_ids {
+        sqlx::query("DELETE FROM messages WHERE id = ?")
+            .bind(message_id)
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to delete message: {}", e))?;
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

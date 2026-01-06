@@ -1,221 +1,119 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import VirtualListDemo from '@/components/VirtualListDemo.vue';
-import GreetExample from '@/components/GreetExample.vue';
+import { computed, ref } from 'vue';
+import EmailComposer from '@/components/EmailComposer.vue';
+import EmailList from '@/components/EmailList.vue';
+import EmailReader from '@/components/EmailReader.vue';
+import FolderNavigation from '@/components/FolderNavigation.vue';
+import type { FolderKey } from '@/components/FolderNavigation.vue';
+import AppSidebar from '@/components/AppSidebar.vue';
+import SearchBar from '@/components/SearchBar.vue';
+import TopHeader from '@/components/TopHeader.vue';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-const greetMsg = ref('');
-const name = ref('');
+const selectedFolder = ref<FolderKey>('INBOX');
+const selectedLabel = ref<number | null>(null);
+const selectedMessageId = ref<number | null>(null);
+const isComposing = ref(false);
+const searchResults = ref<any[]>([]);
+const isSearching = ref(false);
+const theme = ref<'light' | 'dark'>('light');
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke('greet', { name: name.value });
+const emailListRef = ref<InstanceType<typeof EmailList> | null>(null);
+
+function handleFolderSelect(folder: FolderKey) {
+  selectedFolder.value = folder;
+  selectedLabel.value = null;
+  selectedMessageId.value = null;
+  isSearching.value = false;
 }
+
+function handleMessageSelect(messageId: number) {
+  selectedMessageId.value = messageId;
+  isComposing.value = false;
+}
+
+function openComposer() {
+  isComposing.value = true;
+  selectedMessageId.value = null;
+}
+
+function closeComposer() {
+  isComposing.value = false;
+}
+
+function handleEmailSent() {
+  isComposing.value = false;
+  emailListRef.value?.loadMessages();
+}
+
+function handleSearchResults(results: any[]) {
+  searchResults.value = results;
+  isSearching.value = true;
+}
+
+function handleSearchClear() {
+  searchResults.value = [];
+  isSearching.value = false;
+}
+
+function refreshList() {
+  emailListRef.value?.loadMessages();
+}
+
+function toggleTheme() {
+  theme.value = theme.value === 'light' ? 'dark' : 'light';
+  document.documentElement.classList.toggle('dark');
+}
+
+const messageCount = computed(() => 20);
+const lastUpdate = computed(() => '3 days ago');
 </script>
 
 <template>
-  <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
+  <SidebarProvider>
+    <AppSidebar active-route="mail" />
 
-    <!-- Tailwind CSS Test Section -->
-    <div class="bg-blue-500 text-white p-4 rounded-lg my-4 mx-auto max-w-md">
-      <h2 class="text-xl font-bold mb-2">Tailwind CSS v4 Test</h2>
-      <p class="md:text-lg lg:text-xl">Responsive text: resize window to see changes</p>
-      <div class="mt-2 lg:p-8 md:p-4 p-2 bg-blue-600 rounded">Responsive padding test</div>
-    </div>
+    <!-- Full-width compose view -->
+    <SidebarInset v-if="isComposing">
+      <EmailComposer :account-id="1" @close="closeComposer" @sent="handleEmailSent" />
+    </SidebarInset>
 
-    <!-- shadcn-vue Components Test -->
-    <div class="my-8 mx-auto max-w-2xl space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>shadcn-vue Components Test</CardTitle>
-          <CardDescription>Testing Button, Input, Card, and Dialog components</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="flex gap-2">
-            <Button>Default Button</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="outline">Outline</Button>
+    <!-- Normal email client layout -->
+    <SidebarInset v-else>
+      <TopHeader
+        :email-count="messageCount"
+        :last-update-text="lastUpdate"
+        :theme="theme"
+        @toggle-theme="toggleTheme"
+      />
+
+      <FolderNavigation
+        :active-folder="selectedFolder"
+        :inbox-count="messageCount"
+        @compose="openComposer"
+        @select-folder="handleFolderSelect"
+      />
+
+      <div class="flex min-h-0 flex-1 overflow-hidden">
+        <div class="flex w-full flex-col border-r bg-background md:w-[320px]">
+          <div class="border-b px-3 py-2 md:px-4">
+            <SearchBar @results="handleSearchResults" @clear="handleSearchClear" />
           </div>
 
-          <Input placeholder="Test input component" />
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <EmailList
+              ref="emailListRef"
+              :folder="selectedFolder"
+              :label-id="selectedLabel ?? undefined"
+              @select-message="handleMessageSelect"
+            />
+          </div>
+        </div>
 
-          <Dialog>
-            <DialogTrigger as-child>
-              <Button variant="outline">Open Dialog</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Dialog Test</DialogTitle>
-                <DialogDescription>
-                  This is a test of the Dialog component from shadcn-vue.
-                </DialogDescription>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
-    </div>
-
-    <!-- TanStack Virtual Demo -->
-    <div class="my-8">
-      <VirtualListDemo />
-    </div>
-
-    <!-- Type-Safe IPC Example -->
-    <div class="my-8">
-      <GreetExample />
-    </div>
-
-    <div class="row">
-      <a href="https://vite.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
-    </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
+        <div class="flex min-w-0 flex-1 flex-col bg-background">
+          <EmailReader :message-id="selectedMessageId ?? undefined" @refresh="refreshList" />
+        </div>
+      </div>
+    </SidebarInset>
+  </SidebarProvider>
 </template>
-
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-</style>
-<style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-</style>

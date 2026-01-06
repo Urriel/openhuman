@@ -10,17 +10,25 @@
 /// 5. Register it in `lib.rs` using `tauri::generate_handler![greet, my_command]`
 /// 6. Create corresponding TypeScript types in `src/types/commands.ts`
 pub mod account_management;
+pub mod email_list;
 pub mod email_operations;
 pub mod email_sync;
 pub mod greet;
+pub mod label_operations;
 pub mod search;
 
 pub use account_management::{
     add_account, delete_account, list_accounts, update_account_sync_enabled,
 };
+pub use email_list::{get_message, list_folders, list_messages};
 pub use email_operations::{
-    delete_message, mark_read, mark_unread, send_email, star_message, unstar_message,
+    bulk_archive_messages, bulk_delete_messages, bulk_mark_read, delete_message, mark_read,
+    mark_unread, send_email, star_message, unstar_message,
 };
 pub use email_sync::{cancel_sync, get_sync_status, sync_emails};
 pub use greet::greet;
+pub use label_operations::{
+    apply_label, archive_messages, create_label, delete_label, get_message_labels, list_labels,
+    remove_label,
+};
 pub use search::search_messages;
