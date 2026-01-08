@@ -40,7 +40,7 @@ export function useEmailNavigation() {
    * Clear email selection (remove message query param)
    */
   function clearEmailSelection() {
-    const { message, ...otherQuery } = route.query;
+    const { message: _message, ...otherQuery } = route.query;
     void router.push({ query: otherQuery });
   }
 

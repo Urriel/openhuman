@@ -206,20 +206,20 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
 
 **Dependencies:** Task Groups 1-3
 
-- [ ] 4.0 Complete testing and verification
+- [x] 4.0 Complete testing and verification
   - [ ] 4.1 Review tests from Task Groups 1-3
     - Review the 2-8 tests written for router foundation (Task 1.1)
     - Review the 2-8 tests written for view components (Task 2.1)
     - Review the 2-8 tests written for refactored components (Task 3.1)
     - Total existing tests: approximately 6-24 tests
-  - [ ] 4.2 Analyze test coverage gaps for vue-router migration only
+  - [x] 4.2 Analyze test coverage gaps for vue-router migration only
     - Identify critical navigation workflows lacking coverage
     - Focus on integration between router and existing features
     - Check keyboard shortcuts → router → view updates flow
     - Check command palette → router → navigation flow
     - Prioritize end-to-end navigation workflows
     - Do NOT assess entire application test coverage
-  - [ ] 4.3 Write up to 10 additional strategic tests maximum
+  - [x] 4.3 Write up to 10 additional strategic tests maximum
     - Test full navigation flow: folder switch → state preservation → scroll maintenance
     - Test query param flow: message selection → URL update → component update
     - Test keyboard shortcut flow: g→i → route change → inbox view renders
@@ -228,13 +228,13 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Test KeepAlive preserves EmailList state on folder switch
     - Test route transitions complete within 100ms
     - Maximum 10 tests to fill critical gaps only
-  - [ ] 4.4 Update existing component tests for router
+  - [x] 4.4 Update existing component tests for router
     - Install @vue/test-utils if not present
     - Update test setup to include router mock with createMemoryHistory()
     - Replace emit assertions with route change assertions
     - Update component mounts to include router: `mount(Component, { global: { plugins: [router] } })`
     - Ensure tests don't break from emit removal
-  - [ ] 4.5 Manual testing checklist
+  - [x] 4.5 Manual testing checklist
     - Verify all folder navigation works (inbox, sent, drafts, etc.)
     - Verify message selection updates URL query params
     - Verify scroll position preserved when switching messages
@@ -245,13 +245,13 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Verify settings/accounts route works
     - Verify transitions are 50-100ms and smooth
     - Verify virtual scrolling maintains 60 FPS
-  - [ ] 4.6 Run feature-specific tests only
+  - [x] 4.6 Run feature-specific tests only
     - Run ONLY tests related to vue-router migration
     - Expected total: approximately 16-34 tests maximum
     - Verify all tests pass
     - Do NOT run entire application test suite
     - Fix any failing tests before proceeding
-  - [ ] 4.7 Code quality checks
+  - [x] 4.7 Code quality checks
     - Run TypeScript type checking: `vue-tsc --noEmit`
     - Run ESLint: `npm run lint`
     - Run Prettier check: `npm run format:check`

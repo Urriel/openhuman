@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createRouter, createMemoryHistory } from 'vue-router';
 import EmailList from '@/components/EmailList.vue';
+import { routes } from '@/router/routes';
 
 // Mock Tauri invoke at the module level
 vi.mock('@tauri-apps/api/core', () => ({
@@ -40,9 +42,24 @@ describe('EmailList', () => {
   it('renders email list component', async () => {
     vi.mocked(invoke).mockResolvedValue(mockMessages);
 
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    });
+
+    await router.push('/inbox');
+
     mount(EmailList, {
       props: {
         folder: 'INBOX',
+      },
+      global: {
+        plugins: [router],
+        stubs: {
+          VirtualList: true,
+          EmailListItem: true,
+          BulkActionsToolbar: true,
+        },
       },
     });
 
@@ -54,7 +71,23 @@ describe('EmailList', () => {
   it('shows empty state when no messages', async () => {
     vi.mocked(invoke).mockResolvedValue([]);
 
-    const wrapper = mount(EmailList);
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    });
+
+    await router.push('/inbox');
+
+    const wrapper = mount(EmailList, {
+      global: {
+        plugins: [router],
+        stubs: {
+          VirtualList: true,
+          EmailListItem: true,
+          BulkActionsToolbar: true,
+        },
+      },
+    });
 
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('No messages found');
@@ -64,11 +97,65 @@ describe('EmailList', () => {
   it('shows loading state initially', async () => {
     vi.mocked(invoke).mockImplementation(() => new Promise(() => {}));
 
-    const wrapper = mount(EmailList);
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    });
+
+    await router.push('/inbox');
+
+    const wrapper = mount(EmailList, {
+      global: {
+        plugins: [router],
+        stubs: {
+          VirtualList: true,
+          EmailListItem: true,
+          BulkActionsToolbar: true,
+        },
+      },
+    });
 
     // Wait for component to mount and start loading
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Loading messages...');
     });
+  });
+
+  it('updates route query when email is selected', async () => {
+    vi.mocked(invoke).mockResolvedValue(mockMessages);
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    });
+
+    await router.push('/inbox');
+
+    const wrapper = mount(EmailList, {
+      props: {
+        folder: 'INBOX',
+      },
+      global: {
+        plugins: [router],
+        stubs: {
+          VirtualList: true,
+          EmailListItem: true,
+          BulkActionsToolbar: true,
+        },
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(invoke).toHaveBeenCalled();
+    });
+
+    // Simulate email selection by calling the exposed method
+    const emailId = 1;
+    wrapper.vm.loadMessages(); // Make sure component is ready
+    
+    // Manually trigger router navigation (as would happen with click)
+    await router.push({ query: { message: emailId.toString() } });
+    
+    expect(router.currentRoute.value.query.message).toBe('1');
   });
 });

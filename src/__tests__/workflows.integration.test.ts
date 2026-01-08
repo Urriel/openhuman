@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createRouter, createMemoryHistory } from 'vue-router';
 import App from '@/App.vue';
 import { invoke } from '@tauri-apps/api/core';
+import { routes } from '@/router/routes';
 
 // Mock Tauri invoke
 vi.mock('@tauri-apps/api/core', () => ({
@@ -9,8 +11,16 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 describe('Email Client Integration Workflows', () => {
-  beforeEach(() => {
+  let router: ReturnType<typeof createRouter>;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    });
+    await router.push('/inbox');
+    await router.isReady();
   });
 
   describe('Compose and Send Workflow', () => {
@@ -30,7 +40,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Click "Compose New Email" button
@@ -145,7 +155,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Enter search query
@@ -219,7 +229,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Click on email to select
@@ -288,7 +298,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Wait for labels to load
@@ -358,7 +368,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Wait for messages to load
@@ -424,7 +434,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Verify folders are displayed
@@ -491,7 +501,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Select email
@@ -558,7 +568,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Select email
@@ -617,7 +627,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Select email
@@ -683,7 +693,7 @@ describe('Email Client Integration Workflows', () => {
         return Promise.resolve(null);
       });
 
-      const wrapper = mount(App);
+      const wrapper = mount(App, { global: { plugins: [router] } });
       await wrapper.vm.$nextTick();
 
       // Select email with thread

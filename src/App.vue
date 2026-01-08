@@ -81,7 +81,7 @@ onMounted(() => {
 
 <template>
   <SidebarProvider>
-    <AppSidebar :active-route="route.path" />
+    <AppSidebar :active-route="route?.path || '/inbox'" />
 
     <!-- Compose overlay (not a route) -->
     <SidebarInset v-if="isComposing">
