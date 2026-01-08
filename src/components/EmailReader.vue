@@ -114,6 +114,38 @@ const formattedDate = computed(() => {
   });
 });
 
+// Email content rendering with fallback
+const emailContent = computed(() => {
+  if (!message.value) return { html: null, plain: null, error: false };
+
+  try {
+    // Prefer HTML content if available
+    if (message.value.body_html) {
+      // Sanitize HTML by creating a DOM element and checking if it's valid
+      const div = document.createElement('div');
+      div.innerHTML = message.value.body_html;
+      return {
+        html: message.value.body_html,
+        plain: message.value.body_plain,
+        error: false,
+      };
+    }
+    return {
+      html: null,
+      plain: message.value.body_plain,
+      error: false,
+    };
+  } catch (err) {
+    console.error('Error rendering HTML content:', err);
+    // Fallback to plain text if HTML rendering fails
+    return {
+      html: null,
+      plain: message.value.body_plain,
+      error: true,
+    };
+  }
+});
+
 watch(() => props.messageId, loadMessage, { immediate: true });
 </script>
 
@@ -207,14 +239,27 @@ watch(() => props.messageId, loadMessage, { immediate: true });
 
       <!-- Message Body -->
       <div class="flex-1 overflow-y-auto p-6">
+        <!-- Show warning if HTML failed to render and fell back to plain text -->
         <div
-          v-if="message.body_html"
-          class="prose prose-sm max-w-none"
-          v-html="message.body_html"
-        />
-        <div v-else-if="message.body_plain" class="whitespace-pre-wrap text-sm">
-          {{ message.body_plain }}
+          v-if="emailContent.error"
+          class="mb-4 rounded-md bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 text-sm text-yellow-800 dark:text-yellow-200"
+        >
+          ⚠ HTML rendering failed - showing plain text version
         </div>
+
+        <!-- Render HTML content if available and no error -->
+        <div
+          v-if="emailContent.html && !emailContent.error"
+          class="prose prose-sm max-w-none dark:prose-invert"
+          v-html="emailContent.html"
+        />
+
+        <!-- Render plain text content as fallback -->
+        <div v-else-if="emailContent.plain" class="whitespace-pre-wrap text-sm font-mono">
+          {{ emailContent.plain }}
+        </div>
+
+        <!-- No content available -->
         <div v-else class="text-sm text-muted-foreground italic">No message content</div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import type {
   SearchResultItem,
 } from '@/types/command-palette';
 import type { Label } from '@/types/commands';
-import { invokeSearchMessages, invokeListLabels } from '@/types/commands';
+import { invokeSearchMessages, invokeListLabels, invokeSyncEmails } from '@/types/commands';
 import { useEmailActions } from './useEmailActions';
 
 /**
@@ -137,8 +137,21 @@ export const useCommandPalette = createGlobalState(() => {
       category: 'Email Actions',
       keywords: ['refresh', 'reload', 'sync'],
       shortcut: 'Cmd+R',
-      action: () => {
-        window.location.reload();
+      action: async () => {
+        closePalette();
+        try {
+          const result = await invokeSyncEmails();
+          if (result.new_messages > 0) {
+            toast.success(
+              `Synced ${result.new_messages} new message${result.new_messages > 1 ? 's' : ''}`
+            );
+          } else {
+            toast.success('All caught up!');
+          }
+        } catch (err) {
+          console.error('Sync failed:', err);
+          toast.error('Failed to sync emails');
+        }
       },
     },
     // Composition

@@ -16,6 +16,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { useCommandPalette } from '@/composables/useCommandPalette';
 import { useUndoStack } from '@/composables/useUndoStack';
+import { invokeStartSyncScheduler, invokeSyncEmails } from '@/types/commands';
 import { toast } from 'vue-sonner';
 
 const selectedFolder = ref<FolderKey>('INBOX');
@@ -84,7 +85,29 @@ const { executeUndo, hasUndo } = useUndoStack();
 const helpModalRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null);
 
 // Register global keyboard shortcuts
-onMounted(() => {
+onMounted(async () => {
+  // Start background email sync scheduler
+  try {
+    await invokeStartSyncScheduler();
+    console.log('Email sync scheduler started');
+  } catch (err) {
+    console.error('Failed to start sync scheduler:', err);
+    // Non-critical - don't block app startup
+  }
+
+  // Trigger immediate sync for all accounts on startup
+  try {
+    const result = await invokeSyncEmails();
+    if (result.new_messages > 0) {
+      toast.success(
+        `Synced ${result.new_messages} new message${result.new_messages > 1 ? 's' : ''}`
+      );
+    }
+  } catch (err) {
+    console.error('Failed to sync emails on startup:', err);
+    // Non-critical - background sync will retry
+  }
+
   // Command palette shortcuts
   register('Cmd+K', () => openPalette('commands'), { global: true });
   register('/', () => openPalette('search'), { global: true });
@@ -96,6 +119,25 @@ onMounted(() => {
       toast.success('Undone');
     } else {
       toast.info('Nothing to undo');
+    }
+  });
+
+  // Refresh/Sync shortcut
+  register('Cmd+R', async () => {
+    try {
+      const result = await invokeSyncEmails();
+      if (result.new_messages > 0) {
+        toast.success(
+          `Synced ${result.new_messages} new message${result.new_messages > 1 ? 's' : ''}`
+        );
+      } else {
+        toast.success('All caught up!');
+      }
+      // Refresh the email list to show new messages
+      emailListRef.value?.loadMessages();
+    } catch (err) {
+      console.error('Sync failed:', err);
+      toast.error('Failed to sync emails');
     }
   });
 

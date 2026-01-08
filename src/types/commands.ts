@@ -593,3 +593,12 @@ export async function invokeListFolders(accountId?: number): Promise<ListFolders
   const { invoke } = await import('@tauri-apps/api/core');
   return invoke<ListFoldersResponse>('list_folders', { accountId });
 }
+
+/**
+ * Start the background sync scheduler
+ * This will automatically sync emails at regular intervals
+ */
+export async function invokeStartSyncScheduler(): Promise<void> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  return invoke<void>('start_sync_scheduler');
+}

@@ -38,6 +38,27 @@ pub async fn sync_emails(account_id: Option<i64>) -> Result<SyncStats, String> {
     Ok(stats)
 }
 
+/// Start background sync scheduler
+#[tauri::command]
+pub async fn start_sync_scheduler() -> Result<(), String> {
+    use crate::email::sync_orchestrator::SyncOrchestrator;
+    use std::sync::Arc;
+
+    let pool = crate::db::get_pool().await.map_err(|e| e.to_string())?;
+    let pool = Arc::new(pool.clone());
+
+    let orchestrator = SyncOrchestrator::new(pool);
+
+    // Spawn background sync task
+    tokio::spawn(async move {
+        if let Err(e) = orchestrator.start_scheduler().await {
+            eprintln!("Sync scheduler error: {}", e);
+        }
+    });
+
+    Ok(())
+}
+
 /// Get sync status for an account
 #[tauri::command]
 pub async fn get_sync_status(account_id: i64) -> Result<SyncStatusInfo, String> {
@@ -91,25 +112,54 @@ pub async fn cancel_sync(account_id: i64) -> Result<(), String> {
 
 /// Helper: Sync a single account
 async fn sync_single_account(
-    _pool: &sqlx::SqlitePool,
-    _account_id: i64,
+    pool: &sqlx::SqlitePool,
+    account_id: i64,
 ) -> Result<SyncStats, String> {
-    // This is a placeholder - actual sync would use the sync orchestrator
+    use crate::email::sync_orchestrator::SyncOrchestrator;
+    use std::sync::Arc;
+
+    let pool = Arc::new(pool.clone());
+    let orchestrator = SyncOrchestrator::new(pool);
+
+    let sync_stats = orchestrator
+        .sync_account(account_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
     Ok(SyncStats {
-        messages_synced: 0,
-        new_messages: 0,
-        errors: vec![],
+        messages_synced: sync_stats.messages_synced,
+        new_messages: sync_stats.new_messages,
+        errors: sync_stats.errors,
     })
 }
 
 /// Helper: Sync all enabled accounts
-async fn sync_all_accounts(_pool: &sqlx::SqlitePool) -> Result<SyncStats, String> {
-    // This is a placeholder - actual sync would use the sync orchestrator
-    Ok(SyncStats {
+async fn sync_all_accounts(pool: &sqlx::SqlitePool) -> Result<SyncStats, String> {
+    use crate::email::sync_orchestrator::SyncOrchestrator;
+    use std::sync::Arc;
+
+    let pool = Arc::new(pool.clone());
+    let orchestrator = SyncOrchestrator::new(pool);
+
+    let all_stats = orchestrator
+        .sync_all_accounts()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Aggregate stats from all accounts
+    let mut total = SyncStats {
         messages_synced: 0,
         new_messages: 0,
         errors: vec![],
-    })
+    };
+
+    for stats in all_stats {
+        total.messages_synced += stats.messages_synced;
+        total.new_messages += stats.new_messages;
+        total.errors.extend(stats.errors);
+    }
+
+    Ok(total)
 }
 
 #[cfg(test)]

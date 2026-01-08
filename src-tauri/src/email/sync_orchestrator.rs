@@ -719,10 +719,10 @@ async fn store_message(
     message: &ImapMessage,
 ) -> SyncResult<()> {
     // Parse message body if available
-    let (subject, from_addr, body_plain) = if let Some(body) = &message.body {
+    let (subject, from_addr, body_plain, body_html) = if let Some(body) = &message.body {
         parse_message_fields(body)
     } else {
-        (None, None, None)
+        (None, None, None, None)
     };
 
     let message_id = message
@@ -748,8 +748,8 @@ async fn store_message(
     // Insert new message
     sqlx::query(
         r#"
-        INSERT INTO messages (account_id, message_id, folder, subject, from_addr, body_plain, imap_uid, imap_flags, date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        INSERT INTO messages (account_id, message_id, folder, subject, from_addr, body_plain, body_html, imap_uid, imap_flags, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         "#,
     )
     .bind(account_id)
@@ -758,6 +758,7 @@ async fn store_message(
     .bind(subject)
     .bind(from_addr)
     .bind(body_plain)
+    .bind(body_html)
     .bind(message.uid as i64)
     .bind(message.flags.join(","))
     .execute(pool)
@@ -767,24 +768,48 @@ async fn store_message(
     Ok(())
 }
 
-/// Parse basic message fields from body
-fn parse_message_fields(body: &[u8]) -> (Option<String>, Option<String>, Option<String>) {
-    // Basic parsing - in production this would use mailparse crate
-    let body_str = String::from_utf8_lossy(body);
-    let lines: Vec<&str> = body_str.lines().collect();
+/// Parse message fields from body using MIME parser
+/// Returns (subject, from, body_plain, body_html)
+fn parse_message_fields(
+    body: &[u8],
+) -> (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+) {
+    use crate::email::mime_parser::parse_message;
 
-    let mut subject = None;
-    let mut from = None;
+    match parse_message(body) {
+        Ok(parsed) => {
+            // Return both plain and HTML separately
+            (
+                parsed.subject,
+                parsed.from,
+                parsed.body_plain,
+                parsed.body_html,
+            )
+        }
+        Err(_) => {
+            // Fallback to basic parsing if MIME parsing fails
+            let body_str = String::from_utf8_lossy(body);
+            let lines: Vec<&str> = body_str.lines().collect();
 
-    for line in &lines {
-        if line.starts_with("Subject:") {
-            subject = Some(line.trim_start_matches("Subject:").trim().to_string());
-        } else if line.starts_with("From:") {
-            from = Some(line.trim_start_matches("From:").trim().to_string());
+            let mut subject = None;
+            let mut from = None;
+
+            for line in &lines {
+                if line.starts_with("Subject:") {
+                    subject = Some(line.trim_start_matches("Subject:").trim().to_string());
+                } else if line.starts_with("From:") {
+                    from = Some(line.trim_start_matches("From:").trim().to_string());
+                }
+            }
+
+            // Return raw body as plain text, no HTML in fallback mode
+            (subject, from, Some(body_str.to_string()), None)
         }
     }
-
-    (subject, from, Some(body_str.to_string()))
 }
 
 /// Update message flags in database

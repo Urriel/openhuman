@@ -14,11 +14,11 @@ mod tests;
 
 use commands::{
     add_account, apply_label, archive_messages, bulk_archive_messages, bulk_delete_messages,
-    bulk_mark_read, create_label, delete_account, delete_draft, delete_label, delete_message,
-    get_message, get_message_labels, greet, list_accounts, list_folders, list_labels,
-    list_messages, mark_read, mark_unread, move_messages, remove_label, save_draft,
-    search_messages, send_email, star_message, test_account_connection, unstar_message,
-    update_account, update_account_sync_enabled,
+    bulk_mark_read, cancel_sync, create_label, delete_account, delete_draft, delete_label,
+    delete_message, get_message, get_message_labels, get_sync_status, greet, list_accounts,
+    list_folders, list_labels, list_messages, mark_read, mark_unread, move_messages, remove_label,
+    save_draft, search_messages, send_email, star_message, start_sync_scheduler, sync_emails,
+    test_account_connection, unstar_message, update_account, update_account_sync_enabled,
 };
 use tauri::Manager;
 
@@ -64,6 +64,11 @@ pub fn run() {
             update_account,
             update_account_sync_enabled,
             test_account_connection,
+            // Email sync
+            sync_emails,
+            get_sync_status,
+            cancel_sync,
+            start_sync_scheduler,
             // Label operations
             create_label,
             list_labels,

@@ -7,6 +7,7 @@ import {
   invokeUpdateAccount,
   invokeRemoveAccount,
   invokeTestAccountConnection,
+  invokeSyncEmails,
   type Account,
   type AddAccountRequest,
   type UpdateAccountRequest,
@@ -163,6 +164,15 @@ async function addAccount() {
     await invokeAddAccount(params);
     toast.success(`Account ${form.value.email} added successfully`);
 
+    // Trigger initial sync for the new account
+    try {
+      await invokeSyncEmails();
+      toast.success('Email sync started');
+    } catch (syncErr) {
+      console.warn('Failed to start sync:', syncErr);
+      // Don't fail the account creation if sync fails
+    }
+
     resetForm();
     await loadAccounts();
     currentView.value = 'list';
@@ -197,6 +207,15 @@ async function updateAccount() {
 
     await invokeUpdateAccount(params);
     toast.success(`Account ${form.value.email} updated successfully`);
+
+    // Trigger sync for the updated account
+    try {
+      await invokeSyncEmails();
+      toast.success('Email sync started');
+    } catch (syncErr) {
+      console.warn('Failed to start sync:', syncErr);
+      // Don't fail the account update if sync fails
+    }
 
     resetForm();
     await loadAccounts();

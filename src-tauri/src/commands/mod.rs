@@ -26,7 +26,7 @@ pub use email_operations::{
     bulk_archive_messages, bulk_delete_messages, bulk_mark_read, delete_draft, delete_message,
     mark_read, mark_unread, move_messages, save_draft, send_email, star_message, unstar_message,
 };
-pub use email_sync::{cancel_sync, get_sync_status, sync_emails};
+pub use email_sync::{cancel_sync, get_sync_status, start_sync_scheduler, sync_emails};
 pub use greet::greet;
 pub use label_operations::{
     apply_label, archive_messages, create_label, delete_label, get_message_labels, list_labels,
