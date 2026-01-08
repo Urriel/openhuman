@@ -15,7 +15,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
 **Dependencies:** None
 
 - [ ] 1.0 Complete router foundation setup
-  - [ ] 1.1 Write 2-8 focused tests for router configuration
+  - [x] 1.1 Write 2-8 focused tests for router configuration
     - Test router instance creation with createWebHistory()
     - Test default route redirect (/ → /inbox)
     - Test folder route matching (inbox, sent, drafts, etc.)
@@ -32,7 +32,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
   - [ ] 1.4 Create router directory structure
     - Create `src/router/` directory
     - Create `src/views/` directory
-  - [ ] 1.5 Define route configuration (src/router/routes.ts)
+  - [x] 1.5 Define route configuration (src/router/routes.ts)
     - Import route types from vue-router
     - Create routes array with RouteRecordRaw type
     - Add root redirect: `{ path: '/', redirect: '/inbox' }`
@@ -40,7 +40,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Add settings route: `/settings/accounts`
     - Include meta properties for context: `meta: { context: 'inbox' }`
     - Export routes array
-  - [ ] 1.6 Create router instance (src/router/index.ts)
+  - [x] 1.6 Create router instance (src/router/index.ts)
     - Import createRouter, createWebHistory from vue-router
     - Import routes from routes.ts
     - Create router with createWebHistory()
@@ -50,7 +50,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Import router from @/router
     - Add `.use(router)` before `.mount('#app')`
     - Verify app compiles without errors
-  - [ ] 1.8 Ensure router foundation tests pass
+  - [x] 1.8 Ensure router foundation tests pass
     - Run ONLY the 2-8 tests written in 1.1
     - Verify router instance created successfully
     - Verify routes match correctly
