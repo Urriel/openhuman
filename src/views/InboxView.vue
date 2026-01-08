@@ -78,7 +78,7 @@ function handleRefresh() {
       @toggle-theme="handleToggleTheme"
     />
 
-    <FolderNavigation :active-folder="currentFolder" :inbox-count="messageCount" />
+    <FolderNavigation :inbox-count="messageCount" />
 
     <div class="flex min-h-0 flex-1 overflow-hidden">
       <div class="flex w-full flex-col border-r bg-background md:w-[320px]">

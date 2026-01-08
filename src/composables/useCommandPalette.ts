@@ -1,5 +1,6 @@
 import { createGlobalState, useDebounceFn } from '@vueuse/core';
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { toast } from 'vue-sonner';
 import type {
   Command,
@@ -36,6 +37,9 @@ export const useCommandPalette = createGlobalState(() => {
 
   // Email actions
   const emailActions = useEmailActions();
+
+  // Router for navigation
+  const router = useRouter();
 
   /**
    * Current page in navigation stack
@@ -226,7 +230,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['inbox', 'go'],
       shortcut: 'g→i',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/inbox');
+        closePalette();
       },
     },
     {
@@ -236,7 +241,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['sent', 'go'],
       shortcut: 'g→s',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/sent');
+        closePalette();
       },
     },
     {
@@ -246,7 +252,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['drafts', 'go'],
       shortcut: 'g→d',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/drafts');
+        closePalette();
       },
     },
     {
@@ -256,7 +263,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['all', 'mail', 'go'],
       shortcut: 'g→a',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/inbox'); // All mail could be inbox with no filters
+        closePalette();
       },
     },
     {
@@ -266,7 +274,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['starred', 'go'],
       shortcut: 'g→*',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/favorites');
+        closePalette();
       },
     },
     {
@@ -276,7 +285,8 @@ export const useCommandPalette = createGlobalState(() => {
       keywords: ['archive', 'go'],
       shortcut: 'g→e',
       action: () => {
-        toast.info('Navigation not yet implemented');
+        void router.push('/archive');
+        closePalette();
       },
     },
     // Selection

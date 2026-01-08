@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import { invoke } from '@tauri-apps/api/core';
 import VirtualList from './VirtualList.vue';
 import EmailListItem from './EmailListItem.vue';
 import BulkActionsToolbar from './BulkActionsToolbar.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useEmailNavigation } from '@/composables/useEmailNavigation';
 
 interface MessageListItem {
   id: number;
@@ -26,9 +28,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const emit = defineEmits<{
-  selectMessage: [messageId: number];
-}>();
+const route = useRoute();
+const { selectEmail } = useEmailNavigation();
 
 const messages = ref<MessageListItem[]>([]);
 const selectedIds = ref<Set<number>>(new Set());
@@ -45,6 +46,27 @@ const someChecked = computed(() => {
 });
 
 const selectedEmailId = computed(() => messages.value[selectedIndex.value]?.id);
+
+// Watch route query for message selection changes
+watch(
+  () => route.query.message,
+  (messageId) => {
+    if (messageId) {
+      const id = Number(messageId);
+      selectedIds.value.clear();
+      selectedIds.value.add(id);
+      
+      // Update selectedIndex to match the message in the list
+      const index = messages.value.findIndex(msg => msg.id === id);
+      if (index !== -1) {
+        selectedIndex.value = index;
+      }
+    } else {
+      selectedIds.value.clear();
+    }
+  },
+  { immediate: true }
+);
 
 async function loadMessages() {
   try {
@@ -66,9 +88,7 @@ async function loadMessages() {
 }
 
 function selectMessage(messageId: number) {
-  selectedIds.value.clear();
-  selectedIds.value.add(messageId);
-  emit('selectMessage', messageId);
+  selectEmail(messageId);
 }
 
 function handleCheck(messageId: number, checked: boolean) {

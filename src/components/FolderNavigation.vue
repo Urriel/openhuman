@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   Archive,
   AlertOctagon,
@@ -12,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useEmailNavigation } from '@/composables/useEmailNavigation';
 
 export type FolderKey =
   | 'INBOX'
@@ -31,14 +34,34 @@ interface FolderItem {
 }
 
 const props = defineProps<{
-  activeFolder: FolderKey;
   inboxCount: number;
 }>();
 
 const emit = defineEmits<{
   compose: [];
-  selectFolder: [folder: FolderKey];
 }>();
+
+const route = useRoute();
+const { navigateToFolder } = useEmailNavigation();
+
+// Determine active folder from route
+const activeFolder = computed<FolderKey>(() => {
+  const folder = route.params.folder as string;
+  if (!folder) return 'INBOX';
+  
+  const folderMap: Record<string, FolderKey> = {
+    inbox: 'INBOX',
+    sent: 'Sent',
+    drafts: 'Drafts',
+    favorites: 'Favorites',
+    archive: 'Archive',
+    deleted: 'Deleted',
+    spam: 'Spam',
+    junk: 'Junk',
+  };
+  
+  return folderMap[folder.toLowerCase()] || 'INBOX';
+});
 
 const folders: FolderItem[] = [
   { key: 'INBOX', label: 'Inbox', icon: Inbox, count: props.inboxCount },
@@ -58,6 +81,10 @@ function tabClass(isActive: boolean) {
       ? 'bg-muted text-foreground'
       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
   );
+}
+
+function handleFolderClick(folder: FolderKey) {
+  navigateToFolder(folder);
 }
 </script>
 
@@ -81,8 +108,8 @@ function tabClass(isActive: boolean) {
         v-for="folder in folders"
         :key="folder.key"
         variant="ghost"
-        :class="tabClass(props.activeFolder === folder.key)"
-        @click="emit('selectFolder', folder.key)"
+        :class="tabClass(activeFolder === folder.key)"
+        @click="handleFolderClick(folder.key)"
       >
         <component :is="folder.icon" class="size-4" />
         <span>{{ folder.label }}</span>

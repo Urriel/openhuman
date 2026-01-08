@@ -122,15 +122,15 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
 
 **Dependencies:** Task Groups 1-2
 
-- [ ] 3.0 Complete component and composable refactoring
-  - [ ] 3.1 Write 2-8 focused tests for refactored components
+- [x] 3.0 Complete component and composable refactoring
+  - [x] 3.1 Write 2-8 focused tests for refactored components
     - Test FolderNavigation navigates using router.push() on click
     - Test EmailList updates route query on message selection
     - Test keyboard shortcuts trigger router navigation (g→i, g→s)
     - Test command palette executes router.push() for navigation commands
     - Test App.vue renders RouterView with KeepAlive
     - Limit to critical navigation behavior changes
-  - [ ] 3.2 Refactor App.vue to use RouterView
+  - [x] 3.2 Refactor App.vue to use RouterView
     - Remove state refs: selectedFolder, selectedMessageId, isComposing, showAccountManagement
     - Remove event handlers: handleFolderSelect, handleMessageSelect, openComposer, etc.
     - Import useRoute from vue-router
@@ -139,21 +139,21 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Keep SidebarProvider, AppSidebar, Toaster, CommandPalette, KeyboardShortcutsHelp
     - Update keyboard shortcuts to use router.push() instead of manual state
     - Target ~30-50 lines (down from ~183)
-  - [ ] 3.3 Refactor FolderNavigation.vue
+  - [x] 3.3 Refactor FolderNavigation.vue
     - Import useRouter from vue-router
     - Replace `emit('selectFolder')` with `router.push('/' + folder.toLowerCase())`
     - Replace `emit('compose')` with router navigation (determine behavior)
     - Use route.params.folder to determine active folder
     - Remove emits definitions
     - Maintain existing UI and styling
-  - [ ] 3.4 Refactor EmailList.vue
+  - [x] 3.4 Refactor EmailList.vue
     - Import useRoute, useRouter from vue-router
     - Replace `emit('selectMessage')` with `router.push({ query: { message: id } })`
     - Watch route.query.message to update selected state
     - Maintain TanStack Virtual scrolling performance
     - Preserve keyboard navigation (j/k) functionality
     - Remove selectMessage emit definition
-  - [ ] 3.5 Refactor AppSidebar.vue
+  - [x] 3.5 Refactor AppSidebar.vue
     - Replace `#` placeholder URLs with actual route paths
     - Update navigation items to use router-link or @click with router.push()
     - Use route.path to determine active menu item
@@ -162,12 +162,12 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Determine if search needs dedicated route or stays inline
     - If inline, maintain existing behavior
     - If route, implement router.push({ path: '/search', query: { q } })
-  - [ ] 3.7 Refactor useKeyboardShortcuts.ts
+  - [x] 3.7 Refactor useKeyboardShortcuts.ts
     - Update ViewContext type to match route meta.context values
     - Accept router instance as optional parameter
     - Update context detection to derive from route.name or route.meta
     - Ensure sequential shortcuts (g→i, g→s) work with router
-  - [ ] 3.8 Refactor useCommandPalette.ts
+  - [x] 3.8 Refactor useCommandPalette.ts
     - Import useRouter composable
     - Replace toast.info() navigation placeholders with router.push()
     - Update go-inbox command: `router.push('/inbox')`
@@ -176,7 +176,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Update go-archive command: `router.push('/archive')`
     - Add closePalette() after navigation commands
     - Maintain existing action commands (archive, delete, star)
-  - [ ] 3.9 Update App.vue keyboard shortcuts with router
+  - [x] 3.9 Update App.vue keyboard shortcuts with router
     - Register g→i shortcut: `router.push('/inbox')`
     - Register g→s shortcut: `router.push('/sent')`
     - Register g→d shortcut: `router.push('/drafts')`
