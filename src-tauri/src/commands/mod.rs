@@ -18,12 +18,13 @@ pub mod label_operations;
 pub mod search;
 
 pub use account_management::{
-    add_account, delete_account, list_accounts, update_account_sync_enabled,
+    add_account, delete_account, list_accounts, test_account_connection, update_account,
+    update_account_sync_enabled,
 };
 pub use email_list::{get_message, list_folders, list_messages};
 pub use email_operations::{
-    bulk_archive_messages, bulk_delete_messages, bulk_mark_read, delete_message, mark_read,
-    mark_unread, send_email, star_message, unstar_message,
+    bulk_archive_messages, bulk_delete_messages, bulk_mark_read, delete_draft, delete_message,
+    mark_read, mark_unread, move_messages, save_draft, send_email, star_message, unstar_message,
 };
 pub use email_sync::{cancel_sync, get_sync_status, sync_emails};
 pub use greet::greet;

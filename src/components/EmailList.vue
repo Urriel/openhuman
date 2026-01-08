@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, nextTick } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import VirtualList from './VirtualList.vue';
 import EmailListItem from './EmailListItem.vue';
 import BulkActionsToolbar from './BulkActionsToolbar.vue';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 interface MessageListItem {
   id: number;
@@ -33,6 +34,7 @@ const messages = ref<MessageListItem[]>([]);
 const selectedIds = ref<Set<number>>(new Set());
 const checkedIds = ref<Set<number>>(new Set());
 const isLoading = ref(false);
+const selectedIndex = ref(0);
 
 const allChecked = computed(() => {
   return messages.value.length > 0 && checkedIds.value.size === messages.value.length;
@@ -41,6 +43,8 @@ const allChecked = computed(() => {
 const someChecked = computed(() => {
   return checkedIds.value.size > 0 && checkedIds.value.size < messages.value.length;
 });
+
+const selectedEmailId = computed(() => messages.value[selectedIndex.value]?.id);
 
 async function loadMessages() {
   try {
@@ -135,8 +139,54 @@ watch([() => props.folder, () => props.labelId, () => props.accountId], () => {
   loadMessages();
 });
 
+// Keyboard navigation
+const { register } = useKeyboardShortcuts();
+
+function moveSelectionDown() {
+  if (selectedIndex.value < messages.value.length - 1) {
+    selectedIndex.value++;
+    scrollToSelected();
+  }
+}
+
+function moveSelectionUp() {
+  if (selectedIndex.value > 0) {
+    selectedIndex.value--;
+    scrollToSelected();
+  }
+}
+
+function openSelectedEmail() {
+  const emailId = selectedEmailId.value;
+  if (emailId) {
+    selectMessage(emailId);
+  }
+}
+
+function toggleSelectedCheckbox() {
+  const emailId = selectedEmailId.value;
+  if (emailId) {
+    const isChecked = checkedIds.value.has(emailId);
+    handleCheck(emailId, !isChecked);
+  }
+}
+
+function scrollToSelected() {
+  nextTick(() => {
+    const element = document.querySelector(`[data-email-index="${selectedIndex.value}"]`);
+    element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+}
+
 onMounted(() => {
   loadMessages();
+
+  // Register keyboard shortcuts for navigation
+  register('j', moveSelectionDown, { view: 'inbox' });
+  register('k', moveSelectionUp, { view: 'inbox' });
+  register('Enter', openSelectedEmail, { view: 'inbox' });
+  register('o', openSelectedEmail, { view: 'inbox' });
+  register('x', toggleSelectedCheckbox, { view: 'inbox' });
 });
 
 defineExpose({
@@ -182,23 +232,25 @@ defineExpose({
 
     <!-- Virtual List -->
     <VirtualList v-else :items="messages" :item-height="100" container-height="100%" :overscan="10">
-      <template #default="{ item }">
-        <EmailListItem
-          :id="item.id"
-          :subject="item.subject"
-          :from="item.from_addr"
-          :from-email="item.from_addr"
-          :preview="item.preview"
-          :date="item.date"
-          :is-read="item.is_read"
-          :is-starred="item.is_starred"
-          :has-attachments="item.has_attachments"
-          :selected="selectedIds.has(item.id)"
-          :checked="checkedIds.has(item.id)"
-          :is-verified="item.id % 3 === 0"
-          @click="selectMessage"
-          @check="handleCheck"
-        />
+      <template #default="{ item, index }">
+        <div :data-email-index="index" :class="{ 'bg-accent': selectedIndex === index }">
+          <EmailListItem
+            :id="item.id"
+            :subject="item.subject"
+            :from="item.from_addr"
+            :from-email="item.from_addr"
+            :preview="item.preview"
+            :date="item.date"
+            :is-read="item.is_read"
+            :is-starred="item.is_starred"
+            :has-attachments="item.has_attachments"
+            :selected="selectedIds.has(item.id)"
+            :checked="checkedIds.has(item.id)"
+            :is-verified="item.id % 3 === 0"
+            @click="selectMessage"
+            @check="handleCheck"
+          />
+        </div>
       </template>
     </VirtualList>
   </div>

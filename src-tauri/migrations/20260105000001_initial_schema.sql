@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
     provider TEXT NOT NULL,
-    pop3_host TEXT NOT NULL,
-    pop3_port INTEGER NOT NULL DEFAULT 995,
+    imap_host TEXT NOT NULL,
+    imap_port INTEGER NOT NULL DEFAULT 993,
     smtp_host TEXT NOT NULL,
     smtp_port INTEGER NOT NULL DEFAULT 465,
     sync_enabled INTEGER NOT NULL DEFAULT 1,
@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS messages (
     body_html TEXT,
     references_header TEXT,
     in_reply_to TEXT,
+    imap_uid INTEGER,
+    imap_flags TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE SET NULL,
@@ -80,12 +82,14 @@ CREATE TABLE IF NOT EXISTS outbox (
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 
--- Sync state table (tracks POP3 sync progress per account)
+-- Sync state table (tracks IMAP sync progress per account)
 CREATE TABLE IF NOT EXISTS sync_state (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL UNIQUE,
     last_sync_at TEXT,
-    uidl_mappings TEXT,
+    uid_mappings TEXT,
+    uid_validity INTEGER,
+    uid_next INTEGER,
     messages_fetched INTEGER NOT NULL DEFAULT 0,
     sync_status TEXT NOT NULL DEFAULT 'idle',
     error_message TEXT,
@@ -98,6 +102,11 @@ CREATE TABLE IF NOT EXISTS folders (
     account_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     message_count INTEGER NOT NULL DEFAULT 0,
+    folder_type TEXT,
+    selectable INTEGER DEFAULT 1,
+    flags TEXT,
+    uidvalidity INTEGER,
+    uidnext INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     UNIQUE(account_id, name)
@@ -121,6 +130,9 @@ CREATE INDEX IF NOT EXISTS idx_messages_folder ON messages(folder);
 CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(is_read);
 CREATE INDEX IF NOT EXISTS idx_messages_starred ON messages(is_starred);
 
+-- Messages: IMAP UID lookups
+CREATE INDEX IF NOT EXISTS idx_messages_imap_uid ON messages(account_id, folder, imap_uid);
+
 -- Sync state: account lookups
 CREATE INDEX IF NOT EXISTS idx_sync_state_account ON sync_state(account_id);
 
@@ -129,6 +141,9 @@ CREATE INDEX IF NOT EXISTS idx_outbox_status_retry ON outbox(send_status, next_r
 
 -- Attachments: message lookups
 CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(message_id);
+
+-- Folders: account lookups
+CREATE INDEX IF NOT EXISTS idx_folders_account ON folders(account_id);
 
 -- Threads: latest message sorting
 CREATE INDEX IF NOT EXISTS idx_threads_latest_date ON threads(latest_message_date DESC);

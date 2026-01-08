@@ -6,6 +6,15 @@
 
 OpenHuman is a local-first email client built with Tauri 2 (Rust backend) and Vue 3 (TypeScript frontend). The application prioritizes keyboard-first navigation, performance, and privacy.
 
+**Design Philosophy:** OpenHuman follows a Superhuman-inspired design approach optimized for power users. See `agent-os/product/design-principles.md` for comprehensive guidelines.
+
+**Core Principles:**
+
+1. **Keyboard First, Mouse Optional** - Every action has a keyboard shortcut
+2. **Density Over Whitespace** - High information density with clear visual hierarchy
+3. **AI as Collaborator, Not Replacement** - AI suggests, human decides
+4. **Speed Through Reduction** - Remove friction, keep acceleration
+
 ## Quick Reference
 
 ### Essential Commands
@@ -71,6 +80,7 @@ Generate specific questions to verify your implementation:
 - **Architecture:** "Does this follow our IPC pattern? Are components properly structured?"
 - **Performance:** "Will this work with 1000+ items? Are queries optimized?"
 - **Accessibility:** "Is keyboard navigation working? Are ARIA labels present?"
+- **Design Principles:** "Does this follow our keyboard-first, high-density, speed-focused design principles?"
 
 ### 3. Answer Verification Questions
 

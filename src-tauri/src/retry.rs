@@ -43,15 +43,17 @@ impl Default for RetryConfig {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use openhuman_lib::retry::retry_with_backoff;
 ///
-/// async fn fetch_data() -> Result<String, String> {
-///     // Network operation that might fail
-///     Ok("data".to_string())
-/// }
+/// async fn example() {
+///     async fn fetch_data() -> Result<String, String> {
+///         // Network operation that might fail
+///         Ok("data".to_string())
+///     }
 ///
-/// let result = retry_with_backoff(|| fetch_data(), 5).await;
+///     let result = retry_with_backoff(|| fetch_data(), 5).await;
+/// }
 /// ```
 pub async fn retry_with_backoff<F, Fut, T, E>(operation: F, max_attempts: u32) -> Result<T, E>
 where

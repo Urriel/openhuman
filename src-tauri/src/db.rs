@@ -133,27 +133,35 @@ mod tests {
             .await
             .expect("Failed to initialize database");
 
-        // Insert a test account
+        // Insert a test account with IMAP columns
         let result = sqlx::query(
-            "INSERT INTO accounts (email, provider, pop3_host, smtp_host) VALUES (?, ?, ?, ?)",
+            "INSERT INTO accounts (email, provider, imap_host, imap_port, smtp_host, smtp_port) VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind("test@example.com")
         .bind("custom")
-        .bind("pop.example.com")
+        .bind("imap.example.com")
+        .bind(993)
         .bind("smtp.example.com")
+        .bind(465)
         .execute(&pool)
         .await;
 
         assert!(result.is_ok(), "Should insert account successfully");
 
-        // Verify the account was created
-        let count: (i32,) = sqlx::query_as("SELECT COUNT(*) FROM accounts WHERE email = ?")
+        // Verify the account was created with correct IMAP port
+        let row = sqlx::query("SELECT email, imap_host, imap_port FROM accounts WHERE email = ?")
             .bind("test@example.com")
             .fetch_one(&pool)
             .await
             .expect("Failed to query accounts");
 
-        assert_eq!(count.0, 1, "Account should be created");
+        let email: String = row.get("email");
+        let imap_host: String = row.get("imap_host");
+        let imap_port: i64 = row.get("imap_port");
+
+        assert_eq!(email, "test@example.com");
+        assert_eq!(imap_host, "imap.example.com");
+        assert_eq!(imap_port, 993);
     }
 
     #[tokio::test]
@@ -164,11 +172,11 @@ mod tests {
 
         // Create an account first
         sqlx::query(
-            "INSERT INTO accounts (email, provider, pop3_host, smtp_host) VALUES (?, ?, ?, ?)",
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
         )
         .bind("test@example.com")
         .bind("custom")
-        .bind("pop.example.com")
+        .bind("imap.example.com")
         .bind("smtp.example.com")
         .execute(&pool)
         .await
@@ -219,11 +227,11 @@ mod tests {
 
         // Create an account
         sqlx::query(
-            "INSERT INTO accounts (email, provider, pop3_host, smtp_host) VALUES (?, ?, ?, ?)",
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
         )
         .bind("test@example.com")
         .bind("custom")
-        .bind("pop.example.com")
+        .bind("imap.example.com")
         .bind("smtp.example.com")
         .execute(&pool)
         .await
@@ -266,11 +274,11 @@ mod tests {
 
         // Create an account
         sqlx::query(
-            "INSERT INTO accounts (email, provider, pop3_host, smtp_host) VALUES (?, ?, ?, ?)",
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
         )
         .bind("test@example.com")
         .bind("custom")
-        .bind("pop.example.com")
+        .bind("imap.example.com")
         .bind("smtp.example.com")
         .execute(&pool)
         .await
@@ -282,27 +290,181 @@ mod tests {
             .await
             .expect("Failed to get account ID");
 
-        // Create sync state
+        // Create sync state with IMAP-specific fields
         let result = sqlx::query(
-            "INSERT INTO sync_state (account_id, uidl_mappings, sync_status) VALUES (?, ?, ?)",
+            "INSERT INTO sync_state (account_id, uid_mappings, sync_status, uid_validity, uid_next) VALUES (?, ?, ?, ?, ?)",
         )
         .bind(account_id.0)
-        .bind(r#"{"uidl1": 1, "uidl2": 2}"#)
+        .bind(r#"{"123": 1, "124": 2}"#)
         .bind("syncing")
+        .bind(12345)
+        .bind(126)
         .execute(&pool)
         .await;
 
-        assert!(result.is_ok(), "Should create sync state");
+        assert!(result.is_ok(), "Should create sync state with IMAP fields");
 
         // Verify sync state
         let row =
-            sqlx::query("SELECT sync_status, uidl_mappings FROM sync_state WHERE account_id = ?")
+            sqlx::query("SELECT sync_status, uid_mappings, uid_validity, uid_next FROM sync_state WHERE account_id = ?")
                 .bind(account_id.0)
                 .fetch_one(&pool)
                 .await
                 .expect("Failed to fetch sync state");
 
         let sync_status: String = row.get("sync_status");
+        let uid_validity: Option<i64> = row.get("uid_validity");
+        let uid_next: Option<i64> = row.get("uid_next");
+
         assert_eq!(sync_status, "syncing");
+        assert_eq!(uid_validity, Some(12345));
+        assert_eq!(uid_next, Some(126));
+    }
+
+    #[tokio::test]
+    async fn test_imap_message_columns() {
+        let pool = init_db("sqlite::memory:")
+            .await
+            .expect("Failed to initialize database");
+
+        // Create account
+        sqlx::query(
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
+        )
+        .bind("test@example.com")
+        .bind("custom")
+        .bind("imap.example.com")
+        .bind("smtp.example.com")
+        .execute(&pool)
+        .await
+        .expect("Failed to create account");
+
+        let account_id: (i64,) = sqlx::query_as("SELECT id FROM accounts WHERE email = ?")
+            .bind("test@example.com")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to get account ID");
+
+        // Insert message with IMAP-specific columns
+        let result = sqlx::query(
+            "INSERT INTO messages (account_id, message_id, from_addr, imap_uid, imap_flags) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind(account_id.0)
+        .bind("msg-123")
+        .bind("sender@example.com")
+        .bind(456)
+        .bind(r#"["\\Seen", "\\Flagged"]"#)
+        .execute(&pool)
+        .await;
+
+        assert!(result.is_ok(), "Should insert message with IMAP fields");
+
+        // Verify IMAP fields
+        let row = sqlx::query("SELECT imap_uid, imap_flags FROM messages WHERE message_id = ?")
+            .bind("msg-123")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to fetch message");
+
+        let imap_uid: Option<i64> = row.get("imap_uid");
+        let imap_flags: Option<String> = row.get("imap_flags");
+
+        assert_eq!(imap_uid, Some(456));
+        assert!(imap_flags.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_imap_folder_columns() {
+        let pool = init_db("sqlite::memory:")
+            .await
+            .expect("Failed to initialize database");
+
+        // Create account
+        sqlx::query(
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
+        )
+        .bind("test@example.com")
+        .bind("custom")
+        .bind("imap.example.com")
+        .bind("smtp.example.com")
+        .execute(&pool)
+        .await
+        .expect("Failed to create account");
+
+        let account_id: (i64,) = sqlx::query_as("SELECT id FROM accounts WHERE email = ?")
+            .bind("test@example.com")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to get account ID");
+
+        // Insert folder with IMAP-specific columns
+        let result = sqlx::query(
+            "INSERT INTO folders (account_id, name, folder_type, selectable, flags, uidvalidity, uidnext) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(account_id.0)
+        .bind("INBOX")
+        .bind("Inbox")
+        .bind(1)
+        .bind(r#"["\\HasNoChildren"]"#)
+        .bind(98765)
+        .bind(100)
+        .execute(&pool)
+        .await;
+
+        assert!(result.is_ok(), "Should insert folder with IMAP fields");
+
+        // Verify IMAP folder fields
+        let row = sqlx::query(
+            "SELECT folder_type, selectable, uidvalidity, uidnext FROM folders WHERE name = ?",
+        )
+        .bind("INBOX")
+        .fetch_one(&pool)
+        .await
+        .expect("Failed to fetch folder");
+
+        let folder_type: Option<String> = row.get("folder_type");
+        let selectable: i64 = row.get("selectable");
+        let uidvalidity: Option<i64> = row.get("uidvalidity");
+        let uidnext: Option<i64> = row.get("uidnext");
+
+        assert_eq!(folder_type, Some("Inbox".to_string()));
+        assert_eq!(selectable, 1);
+        assert_eq!(uidvalidity, Some(98765));
+        assert_eq!(uidnext, Some(100));
+    }
+
+    #[tokio::test]
+    async fn test_imap_uid_index_exists() {
+        let pool = init_db("sqlite::memory:")
+            .await
+            .expect("Failed to initialize database");
+
+        // Check that the IMAP UID index exists
+        let result: (i32,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='idx_messages_imap_uid'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Failed to query indexes");
+
+        assert_eq!(result.0, 1, "idx_messages_imap_uid index should exist");
+    }
+
+    #[tokio::test]
+    async fn test_imap_columns_renamed() {
+        let pool = init_db("sqlite::memory:")
+            .await
+            .expect("Failed to initialize database");
+
+        // Verify that accounts table has imap_host and imap_port columns
+        let result = sqlx::query("SELECT imap_host, imap_port FROM accounts LIMIT 1")
+            .fetch_optional(&pool)
+            .await;
+
+        // Should not error (columns exist), even if no rows
+        assert!(
+            result.is_ok(),
+            "imap_host and imap_port columns should exist"
+        );
     }
 }

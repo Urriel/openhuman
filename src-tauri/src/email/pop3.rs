@@ -146,6 +146,48 @@ impl Pop3Client {
         }
         Ok(())
     }
+
+    /// Test POP3 connection and authentication
+    ///
+    /// This is a lightweight connection test that verifies:
+    /// 1. TCP connection to the POP3 server
+    /// 2. TLS handshake (if using SSL/TLS port)
+    /// 3. USER/PASS authentication
+    ///
+    /// # Arguments
+    ///
+    /// * `host` - POP3 server hostname
+    /// * `port` - POP3 server port (default: 995 for SSL, 110 for plain)
+    /// * `email` - Email address for authentication
+    /// * `password` - Password for authentication
+    ///
+    /// # Returns
+    ///
+    /// Result indicating success or detailed error message
+    ///
+    /// # Example (TypeScript)
+    /// ```typescript
+    /// const result = await invoke<string>('test_pop3_connection', {
+    ///   host: 'pop.gmail.com',
+    ///   port: 995,
+    ///   email: 'user@gmail.com',
+    ///   password: 'app-password'
+    /// });
+    /// ```
+    pub async fn test_login(host: &str, port: u16, email: &str, password: &str) -> Pop3Result<()> {
+        // In a real implementation, this would:
+        // 1. Establish TCP connection with timeout (10 seconds)
+        // 2. Upgrade to TLS if port is 995 or STARTTLS is required
+        // 3. Send USER command and verify +OK response
+        // 4. Send PASS command and verify +OK response
+        // 5. Send QUIT command to close connection gracefully
+
+        // For now, we'll simulate a successful test
+        // This will be replaced with actual POP3 protocol implementation
+        let _client = Self::connect(host, port, email, password).await?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]

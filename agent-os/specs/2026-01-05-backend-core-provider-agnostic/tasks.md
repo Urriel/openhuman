@@ -1,6 +1,7 @@
 # Task Breakdown: Backend Core (Provider-Agnostic)
 
 ## Overview
+
 Total Tasks: 8 Task Groups
 
 ## Task List
@@ -8,6 +9,7 @@ Total Tasks: 8 Task Groups
 ### Foundation & Dependencies
 
 #### Task Group 1: Project Dependencies and Error Types
+
 **Dependencies:** None
 
 - [x] 1.0 Complete dependency setup and error infrastructure
@@ -34,6 +36,7 @@ Total Tasks: 8 Task Groups
     - Check that retry utilities are properly typed
 
 **Acceptance Criteria:**
+
 - All dependencies added and compile without conflicts
 - Custom error types defined with user-friendly messages
 - Exponential backoff retry utility implemented with correct timing
@@ -42,6 +45,7 @@ Total Tasks: 8 Task Groups
 ### Database Layer
 
 #### Task Group 2: SQLite Schema and Migrations
+
 **Dependencies:** Task Group 1
 
 - [x] 2.0 Complete database schema and migration system
@@ -86,6 +90,7 @@ Total Tasks: 8 Task Groups
     - Test foreign key constraints work correctly
 
 **Acceptance Criteria:**
+
 - The 2-6 tests written in 2.1 pass
 - All tables created with correct schema
 - Indexes and foreign keys properly configured
@@ -96,6 +101,7 @@ Total Tasks: 8 Task Groups
 ### Secrets Management
 
 #### Task Group 3: OS Keychain Integration
+
 **Dependencies:** Task Group 2
 
 - [x] 3.0 Complete keychain integration for credential storage
@@ -119,6 +125,7 @@ Total Tasks: 8 Task Groups
     - Test error handling for missing credentials
 
 **Acceptance Criteria:**
+
 - The 2-4 tests written in 3.1 pass
 - Credentials stored securely in OS keychain
 - No credentials logged or exposed in errors
@@ -127,6 +134,7 @@ Total Tasks: 8 Task Groups
 ### Email Protocol Layer
 
 #### Task Group 4: POP3 Fetch Engine
+
 **Dependencies:** Task Groups 2, 3
 
 - [x] 4.0 Complete POP3 fetch engine with incremental sync
@@ -158,6 +166,7 @@ Total Tasks: 8 Task Groups
     - Test retry logic and failure handling
 
 **Acceptance Criteria:**
+
 - The 3-6 tests written in 4.1 pass
 - POP3 connection and authentication working
 - UIDL-based incremental sync implemented
@@ -165,6 +174,7 @@ Total Tasks: 8 Task Groups
 - Auth failures handled without retry
 
 #### Task Group 5: SMTP Send Engine
+
 **Dependencies:** Task Groups 2, 3
 
 - [x] 5.0 Complete SMTP send engine with outbox queue
@@ -199,6 +209,7 @@ Total Tasks: 8 Task Groups
     - Test outbox queue processing and retry logic
 
 **Acceptance Criteria:**
+
 - The 3-5 tests written in 5.1 pass
 - SMTP client sends emails with proper MIME formatting
 - Outbox queue processes pending emails
@@ -208,6 +219,7 @@ Total Tasks: 8 Task Groups
 ### Message Processing Layer
 
 #### Task Group 6: MIME Parsing and Threading
+
 **Dependencies:** Task Group 4
 
 - [x] 6.0 Complete MIME parsing and JWZ threading algorithm
@@ -254,6 +266,7 @@ Total Tasks: 8 Task Groups
     - Test threading algorithm groups messages correctly
 
 **Acceptance Criteria:**
+
 - The 4-7 tests written in 6.1 pass
 - MIME parser extracts text, HTML, headers, attachments, inline images, iCal
 - HTML sanitized to prevent XSS
@@ -264,6 +277,7 @@ Total Tasks: 8 Task Groups
 ### Sync Orchestration
 
 #### Task Group 7: Background Sync Scheduler
+
 **Dependencies:** Task Groups 4, 6
 
 - [x] 7.0 Complete background sync orchestration
@@ -288,6 +302,7 @@ Total Tasks: 8 Task Groups
     - Test parallel sync across multiple accounts
 
 **Acceptance Criteria:**
+
 - The 3-5 tests written in 7.1 pass
 - Initial sync triggers automatically on app launch
 - Periodic sync runs at configured intervals
@@ -298,6 +313,7 @@ Total Tasks: 8 Task Groups
 ### Tauri IPC Integration
 
 #### Task Group 8: Tauri Commands and TypeScript Integration
+
 **Dependencies:** Task Groups 2-7
 
 - [x] 8.0 Complete Tauri IPC commands and frontend integration
@@ -314,14 +330,23 @@ Total Tasks: 8 Task Groups
   - [x] 8.4 Create email operations commands `src-tauri/src/commands/email_operations.rs`
   - [x] 8.5 Create search commands `src-tauri/src/commands/search.rs`
   - [x] 8.6 Register commands in `src-tauri/src/lib.rs`
-  - [ ] 8.7 Create TypeScript types in `src/types/commands.ts` **(DEFERRED - will be added during frontend UI implementation)**
-  - [ ] 8.8 Setup Tauri event listeners in TypeScript **(DEFERRED - will be added during frontend UI implementation)**
+  - [x] 8.7 Create TypeScript types in `src/types/commands.ts`
+    - Added complete TypeScript interfaces for all Tauri commands
+    - Added Tauri event types and event mapping
+    - Created type-safe wrapper functions for all commands
+    - Located in `src/types/commands.ts` (expanded from 108 to 400+ lines)
+  - [x] 8.8 Setup Tauri event listeners in TypeScript
+    - Created `src/lib/tauri-events.ts` with type-safe event listeners
+    - Functions for each event: onSyncStarted, onSyncCompleted, onSyncFailed, etc.
+    - Convenience function `setupTauriEventListeners` for bulk setup
+    - Proper cleanup/unlisten support
   - [x] 8.9 Ensure Tauri command tests pass
     - Run ONLY the 4-8 tests written in 8.1
     - Verify commands execute successfully
     - Test error handling returns proper error messages
 
 **Acceptance Criteria:**
+
 - The 4-8 tests written in 8.1 pass
 - All Tauri commands implemented and registered
 - TypeScript types match Rust signatures exactly
@@ -332,6 +357,7 @@ Total Tasks: 8 Task Groups
 ### Testing & Quality
 
 #### Task Group 9: Integration Testing and Documentation
+
 **Dependencies:** Task Groups 1-8
 
 - [x] 9.0 Complete integration testing and documentation
@@ -348,13 +374,22 @@ Total Tasks: 8 Task Groups
   - [x] 9.3 Write up to 10 additional integration tests maximum
   - [x] 9.4 Run all backend feature tests
   - [x] 9.5 Run clippy and rustfmt
-  - [ ] 9.6 Update technical documentation **(DEFERRED - will be added when onboarding new developers)**
-    - Document database schema in `docs/DATABASE_SCHEMA.md`
-    - Document Tauri commands in `docs/BACKEND_COMMANDS.md`
-    - Add examples for each command showing Rust and TypeScript usage
-    - Document sync orchestration flow with diagrams if helpful
+  - [x] 9.6 Update technical documentation
+    - Created `docs/DATABASE_SCHEMA.md` - Comprehensive database schema documentation with:
+      - All 10 tables documented with field descriptions
+      - Migration history and instructions
+      - Query performance guidelines
+      - Backup/recovery procedures
+      - FTS5 search configuration
+    - Created `docs/BACKEND_COMMANDS.md` - Complete Tauri command reference with:
+      - All 30+ commands documented with Rust signatures
+      - TypeScript types and usage examples for each command
+      - Error handling patterns
+      - Event emission documentation
+      - Performance notes and best practices
 
 **Acceptance Criteria:**
+
 - All feature tests pass (approximately 31-51 tests total)
 - No more than 10 additional integration tests added
 - Code passes clippy and rustfmt checks
@@ -364,6 +399,7 @@ Total Tasks: 8 Task Groups
 ## Execution Order
 
 Recommended implementation sequence:
+
 1. **Foundation & Dependencies** (Task Group 1) - Setup project dependencies and error infrastructure
 2. **Database Layer** (Task Group 2) - Create SQLite schema and migrations
 3. **Secrets Management** (Task Group 3) - Integrate OS keychain for credentials

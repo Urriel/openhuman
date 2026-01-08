@@ -8,6 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { stripHtml } from '@/lib/html-utils';
+import AttachmentUpload from '@/components/AttachmentUpload.vue';
+
+interface AttachmentFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  data: string;
+}
 
 interface Props {
   accountId: number;
@@ -26,6 +35,7 @@ const bcc = ref('');
 const subject = ref('');
 const isSending = ref(false);
 const error = ref<string | null>(null);
+const attachments = ref<AttachmentFile[]>([]);
 
 // Initialize Tiptap editor
 const editor = useEditor({
@@ -69,6 +79,12 @@ async function sendEmail() {
     const bodyHtml = editor.value.getHTML();
     const bodyPlain = stripHtml(bodyHtml);
 
+    // Note: Current backend doesn't support attachments yet
+    // Attachments are stored in component state for future implementation
+    if (attachments.value.length > 0) {
+      console.log('Email has attachments (not yet supported by backend):', attachments.value);
+    }
+
     const emailId = await invoke<number>('send_email', {
       params: {
         accountId: props.accountId,
@@ -95,6 +111,7 @@ function resetForm() {
   cc.value = '';
   bcc.value = '';
   subject.value = '';
+  attachments.value = [];
   editor.value?.commands.clearContent();
 }
 
@@ -192,6 +209,11 @@ function cancel() {
 
         <!-- Editor -->
         <EditorContent :editor="editor" />
+
+        <!-- Attachments -->
+        <div class="pt-4">
+          <AttachmentUpload v-model:attachments="attachments" />
+        </div>
       </div>
     </div>
   </div>

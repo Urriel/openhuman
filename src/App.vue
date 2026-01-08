@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import EmailComposer from '@/components/EmailComposer.vue';
 import EmailList from '@/components/EmailList.vue';
 import EmailReader from '@/components/EmailReader.vue';
@@ -8,7 +8,15 @@ import type { FolderKey } from '@/components/FolderNavigation.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import SearchBar from '@/components/SearchBar.vue';
 import TopHeader from '@/components/TopHeader.vue';
+import CommandPalette from '@/components/CommandPalette.vue';
+import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp.vue';
+import AccountManagement from '@/components/AccountManagement.vue';
+import { Toaster } from '@/components/ui/sonner';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useCommandPalette } from '@/composables/useCommandPalette';
+import { useUndoStack } from '@/composables/useUndoStack';
+import { toast } from 'vue-sonner';
 
 const selectedFolder = ref<FolderKey>('INBOX');
 const selectedLabel = ref<number | null>(null);
@@ -67,6 +75,51 @@ function toggleTheme() {
 
 const messageCount = computed(() => 20);
 const lastUpdate = computed(() => '3 days ago');
+
+// Command palette and keyboard shortcuts
+const { openPalette, showAccountManagement } = useCommandPalette();
+const { register } = useKeyboardShortcuts();
+const { executeUndo, hasUndo } = useUndoStack();
+
+const helpModalRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null);
+
+// Register global keyboard shortcuts
+onMounted(() => {
+  // Command palette shortcuts
+  register('Cmd+K', () => openPalette('commands'), { global: true });
+  register('/', () => openPalette('search'), { global: true });
+
+  // Undo shortcut
+  register('z', async () => {
+    if (hasUndo.value) {
+      await executeUndo();
+      toast.success('Undone');
+    } else {
+      toast.info('Nothing to undo');
+    }
+  });
+
+  // Theme toggle shortcut
+  register('Cmd+Shift+D', () => toggleTheme());
+
+  // Account management shortcut
+  register(
+    'Cmd+,',
+    () => {
+      showAccountManagement.value = true;
+    },
+    { global: true }
+  );
+
+  // Help modal shortcut
+  register(
+    '?',
+    () => {
+      helpModalRef.value?.open();
+    },
+    { global: true }
+  );
+});
 </script>
 
 <template>
@@ -76,6 +129,11 @@ const lastUpdate = computed(() => '3 days ago');
     <!-- Full-width compose view -->
     <SidebarInset v-if="isComposing">
       <EmailComposer :account-id="1" @close="closeComposer" @sent="handleEmailSent" />
+    </SidebarInset>
+
+    <!-- Account Management view -->
+    <SidebarInset v-else-if="showAccountManagement">
+      <AccountManagement @close="showAccountManagement = false" />
     </SidebarInset>
 
     <!-- Normal email client layout -->
@@ -115,5 +173,10 @@ const lastUpdate = computed(() => '3 days ago');
         </div>
       </div>
     </SidebarInset>
+
+    <!-- Global components -->
+    <CommandPalette />
+    <KeyboardShortcutsHelp ref="helpModalRef" />
+    <Toaster position="top-right" />
   </SidebarProvider>
 </template>

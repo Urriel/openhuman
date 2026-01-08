@@ -8,11 +8,17 @@ pub mod error;
 pub mod keychain;
 pub mod retry;
 
+// Tests
+#[cfg(test)]
+mod tests;
+
 use commands::{
-    apply_label, archive_messages, bulk_archive_messages, bulk_delete_messages, bulk_mark_read,
-    create_label, delete_label, delete_message, get_message, get_message_labels, greet,
-    list_folders, list_labels, list_messages, mark_read, mark_unread, remove_label,
-    search_messages, send_email, star_message, unstar_message,
+    add_account, apply_label, archive_messages, bulk_archive_messages, bulk_delete_messages,
+    bulk_mark_read, create_label, delete_account, delete_draft, delete_label, delete_message,
+    get_message, get_message_labels, greet, list_accounts, list_folders, list_labels,
+    list_messages, mark_read, mark_unread, move_messages, remove_label, save_draft,
+    search_messages, send_email, star_message, test_account_connection, unstar_message,
+    update_account, update_account_sync_enabled,
 };
 use tauri::Manager;
 
@@ -51,6 +57,14 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            // Account management
+            add_account,
+            list_accounts,
+            delete_account,
+            update_account,
+            update_account_sync_enabled,
+            test_account_connection,
+            // Label operations
             create_label,
             list_labels,
             delete_label,
@@ -58,14 +72,19 @@ pub fn run() {
             remove_label,
             get_message_labels,
             archive_messages,
+            // Email list operations
             list_messages,
             list_folders,
             get_message,
+            // Email operations
             mark_read,
             mark_unread,
             star_message,
             unstar_message,
             delete_message,
+            move_messages,
+            save_draft,
+            delete_draft,
             search_messages,
             send_email,
             bulk_mark_read,

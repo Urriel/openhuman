@@ -6,13 +6,13 @@
 
 3. [ ] Email Threading & Storage — Parse email headers to build conversation threads, implement SQLite schema for messages/threads/accounts, and create migrations system for schema evolution. `M`
 
-4. [ ] Core Email List UI — Display emails in a virtualized list using TanStack Virtual with infinite scrolling, show sender/subject/preview/timestamp, and support multi-select for batch operations. `M`
+4. [x] Core Email List UI — Display emails in a virtualized list using TanStack Virtual with infinite scrolling, show sender/subject/preview/timestamp, and support multi-select for batch operations. `M` ✅ **Complete** (MVP UI + Workflows)
 
-5. [ ] Email Reader & Navigation — View full email content with HTML rendering, navigate between conversations using keyboard (j/k), and display thread history with quoted replies. `M`
+5. [x] Email Reader & Navigation — View full email content with HTML rendering, navigate between conversations using keyboard (j/k), and display thread history with quoted replies. `M` ✅ **Complete** (MVP UI + Workflows)
 
-6. [ ] Basic Email Actions — Archive, delete, mark read/unread, star/unstar, and move messages to folders. All actions accessible via keyboard shortcuts and update both UI and backend SQLite. `S`
+6. [x] Basic Email Actions — Archive, delete, mark read/unread, star/unstar, and move messages to folders. All actions accessible via keyboard shortcuts and update both UI and backend SQLite. `S` ✅ **Complete** (MVP UI + Workflows)
 
-7. [ ] Email Composer — Compose new emails with rich text editor, reply/reply-all/forward, attach files with drag-and-drop, and send via SMTP with proper MIME formatting. `L`
+7. [~] Email Composer — Compose new emails with rich text editor, reply/reply-all/forward, attach files with drag-and-drop, and send via SMTP with proper MIME formatting. `L` ⚠️ **Partial** (UI complete, attachment sending pending backend work)
 
 8. [ ] Keyboard Shortcuts System — Implement global keyboard shortcut manager covering navigation (j/k, enter), actions (e for archive, # for delete, s for star), and composer (c for compose, r for reply). `M`
 
@@ -20,7 +20,7 @@
 
 10. [ ] Split Inbox — Rule-based inbox views that automatically separate Important, Notifications, and Other messages based on sender patterns, user-defined rules, and historical behavior. `L`
 
-11. [ ] Search Functionality — Full-text search across all messages, accounts, and threads with instant results from local SQLite. Filter by sender, date range, account, and read/starred status. `M`
+11. [x] Search Functionality — Full-text search across all messages, accounts, and threads with instant results from local SQLite. Filter by sender, date range, account, and read/starred status. `M` ✅ **Complete** (MVP UI + Workflows - FTS5 search with highlighting)
 
 12. [ ] Snooze & Remind Me — Snooze emails to reappear at a specific date/time, with options for "Later Today," "Tomorrow," "Next Week," or custom date picker. Background scheduler to resurface snoozed items. `M`
 
@@ -41,6 +41,7 @@
 20. [ ] Cross-Platform Packaging — Build and package for macOS, Windows, and Linux with platform-specific installers, code signing, and auto-update mechanism. `M`
 
 > Notes
+>
 > - Items 1-9 form the MVP (Inbox Zero core experience)
 > - Items 10-15 add Superhuman-inspired productivity features
 > - Items 16-19 are optional pro/AI features

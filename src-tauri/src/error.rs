@@ -45,11 +45,11 @@ impl From<sqlx::migrate::MigrateError> for DatabaseError {
     }
 }
 
-/// POP3 protocol errors
+/// IMAP protocol errors
 #[derive(Error, Debug)]
-pub enum Pop3Error {
+pub enum ImapError {
     #[error(
-        "Failed to connect to POP3 server: Check your internet connection and server settings"
+        "Failed to connect to IMAP server: Check your internet connection and server settings"
     )]
     ConnectionFailed(String),
 
@@ -65,16 +65,23 @@ pub enum Pop3Error {
     #[error("Connection timeout: Please check your internet connection")]
     Timeout,
 
-    #[error("POP3 operation failed: {0}")]
+    #[error("Folder not found: {0}")]
+    FolderNotFound(String),
+
+    #[error("UIDVALIDITY changed - folder requires resync")]
+    UidValidityChanged,
+
+    #[error("Invalid folder name: {0}")]
+    InvalidFolderName(String),
+
+    #[error("IMAP operation failed: {0}")]
     OperationFailed(String),
 }
 
 /// SMTP protocol errors
 #[derive(Error, Debug)]
 pub enum SmtpError {
-    #[error(
-        "Failed to connect to SMTP server: Check your internet connection and server settings"
-    )]
+    #[error("Failed to connect to SMTP server: {0}")]
     ConnectionFailed(String),
 
     #[error("Authentication failed: Please check your email and password")]
@@ -126,8 +133,8 @@ pub enum SyncError {
     #[error("Database error during sync: {0}")]
     DatabaseError(#[from] DatabaseError),
 
-    #[error("POP3 error during sync: {0}")]
-    Pop3Error(#[from] Pop3Error),
+    #[error("IMAP error during sync: {0}")]
+    ImapError(#[from] ImapError),
 
     #[error("MIME parsing error: {0}")]
     ParseError(#[from] MimeParseError),
@@ -200,7 +207,7 @@ pub enum ThreadingError {
 
 // Type aliases for Results
 pub type DbResult<T> = Result<T, DatabaseError>;
-pub type Pop3Result<T> = Result<T, Pop3Error>;
+pub type ImapResult<T> = Result<T, ImapError>;
 pub type SmtpResult<T> = Result<T, SmtpError>;
 pub type SyncResult<T> = Result<T, SyncError>;
 pub type MimeResult<T> = Result<T, MimeParseError>;
@@ -218,8 +225,8 @@ mod tests {
     }
 
     #[test]
-    fn test_pop3_error_authentication_message() {
-        let err = Pop3Error::AuthenticationFailed;
+    fn test_imap_error_authentication_message() {
+        let err = ImapError::AuthenticationFailed;
         assert!(err
             .to_string()
             .contains("Please check your email and password"));
@@ -243,5 +250,17 @@ mod tests {
         let db_err = DatabaseError::QueryError("Query failed".to_string());
         let sync_err: SyncError = db_err.into();
         assert!(matches!(sync_err, SyncError::DatabaseError(_)));
+    }
+
+    #[test]
+    fn test_imap_error_folder_not_found() {
+        let err = ImapError::FolderNotFound("Sent".to_string());
+        assert!(err.to_string().contains("Folder not found"));
+    }
+
+    #[test]
+    fn test_imap_error_uidvalidity_changed() {
+        let err = ImapError::UidValidityChanged;
+        assert!(err.to_string().contains("UIDVALIDITY changed"));
     }
 }

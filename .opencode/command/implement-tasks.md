@@ -190,3 +190,5 @@ The content of this report should follow this structure:
 ### Notes
 [Any additional context about test results, known issues, or regressions]
 ```
+
+$ARGUMENTS

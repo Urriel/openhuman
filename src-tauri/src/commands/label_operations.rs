@@ -211,11 +211,11 @@ mod tests {
 
     async fn setup_test_account(pool: &sqlx::SqlitePool) -> i64 {
         let result = sqlx::query(
-            "INSERT INTO accounts (email, provider, pop3_host, smtp_host) VALUES (?, ?, ?, ?)",
+            "INSERT INTO accounts (email, provider, imap_host, smtp_host) VALUES (?, ?, ?, ?)",
         )
         .bind("test@example.com")
         .bind("custom")
-        .bind("pop.example.com")
+        .bind("imap.example.com")
         .bind("smtp.example.com")
         .execute(pool)
         .await
