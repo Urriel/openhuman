@@ -1,7 +1,14 @@
 <script setup lang="ts">
-// Placeholder for SettingsView - will be fully implemented in Task Group 2
+import { useRouter } from 'vue-router';
+import AccountManagement from '@/components/AccountManagement.vue';
+
+const router = useRouter();
+
+function handleClose() {
+  router.push('/inbox');
+}
 </script>
 
 <template>
-  <div>SettingsView Placeholder</div>
+  <AccountManagement @close="handleClose" />
 </template>

@@ -73,7 +73,7 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
 **Dependencies:** Task Group 1
 
 - [ ] 2.0 Complete view components
-  - [ ] 2.1 Write 2-8 focused tests for view components
+  - [x] 2.1 Write 2-8 focused tests for view components
     - Test InboxView renders with folder from route params
     - Test InboxView passes query params to child components
     - Test message selection updates when route query changes
@@ -95,12 +95,12 @@ This breakdown migrates OpenHuman from state-based navigation to vue-router 4 wi
     - Import AccountManagement component
     - Wrap AccountManagement with proper layout
     - Handle close event to navigate back using router.push()
-  - [ ] 2.4 Add route transitions with Transition component
+  - [x] 2.4 Add route transitions with Transition component
     - Wrap RouterView with `<Transition>` in App.vue (after refactor)
     - Set transition name to subtle fade (50-100ms duration)
     - Define transition CSS classes for fade effect
     - Test transition performance maintains 60 FPS
-  - [ ] 2.5 Ensure view component tests pass
+  - [x] 2.5 Ensure view component tests pass
     - Run ONLY the 2-8 tests written in 2.1
     - Verify views render correctly with route data
     - Verify query param reactivity works

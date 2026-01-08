@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import EmailComposer from '@/components/EmailComposer.vue';
-import EmailList from '@/components/EmailList.vue';
-import EmailReader from '@/components/EmailReader.vue';
-import FolderNavigation from '@/components/FolderNavigation.vue';
-import type { FolderKey } from '@/components/FolderNavigation.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
-import SearchBar from '@/components/SearchBar.vue';
-import TopHeader from '@/components/TopHeader.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp.vue';
-import AccountManagement from '@/components/AccountManagement.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
@@ -18,31 +12,21 @@ import { useCommandPalette } from '@/composables/useCommandPalette';
 import { useUndoStack } from '@/composables/useUndoStack';
 import { toast } from 'vue-sonner';
 
-const selectedFolder = ref<FolderKey>('INBOX');
-const selectedLabel = ref<number | null>(null);
-const selectedMessageId = ref<number | null>(null);
+const route = useRoute();
+const router = useRouter();
+
+// Composition state (kept as overlay, not a route)
 const isComposing = ref(false);
-const searchResults = ref<any[]>([]);
-const isSearching = ref(false);
-const theme = ref<'light' | 'dark'>('light');
 
-const emailListRef = ref<InstanceType<typeof EmailList> | null>(null);
+// Command palette and keyboard shortcuts
+const { openPalette } = useCommandPalette();
+const { register } = useKeyboardShortcuts();
+const { executeUndo, hasUndo } = useUndoStack();
 
-function handleFolderSelect(folder: FolderKey) {
-  selectedFolder.value = folder;
-  selectedLabel.value = null;
-  selectedMessageId.value = null;
-  isSearching.value = false;
-}
-
-function handleMessageSelect(messageId: number) {
-  selectedMessageId.value = messageId;
-  isComposing.value = false;
-}
+const helpModalRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null);
 
 function openComposer() {
   isComposing.value = true;
-  selectedMessageId.value = null;
 }
 
 function closeComposer() {
@@ -51,43 +35,28 @@ function closeComposer() {
 
 function handleEmailSent() {
   isComposing.value = false;
-  emailListRef.value?.loadMessages();
-}
-
-function handleSearchResults(results: any[]) {
-  searchResults.value = results;
-  isSearching.value = true;
-}
-
-function handleSearchClear() {
-  searchResults.value = [];
-  isSearching.value = false;
-}
-
-function refreshList() {
-  emailListRef.value?.loadMessages();
+  // Refresh will be handled by the EmailList component
 }
 
 function toggleTheme() {
-  theme.value = theme.value === 'light' ? 'dark' : 'light';
   document.documentElement.classList.toggle('dark');
 }
-
-const messageCount = computed(() => 20);
-const lastUpdate = computed(() => '3 days ago');
-
-// Command palette and keyboard shortcuts
-const { openPalette, showAccountManagement } = useCommandPalette();
-const { register } = useKeyboardShortcuts();
-const { executeUndo, hasUndo } = useUndoStack();
-
-const helpModalRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null);
 
 // Register global keyboard shortcuts
 onMounted(() => {
   // Command palette shortcuts
   register('Cmd+K', () => openPalette('commands'), { global: true });
   register('/', () => openPalette('search'), { global: true });
+
+  // Navigation shortcuts
+  register('g', () => {}, { global: true }); // Prefix key for navigation
+  register('i', () => void router.push('/inbox'), { global: true });
+  register('s', () => void router.push('/sent'), { global: true });
+  register('d', () => void router.push('/drafts'), { global: true });
+  register('a', () => void router.push('/archive'), { global: true });
+
+  // Compose shortcut
+  register('c', () => openComposer(), { global: true });
 
   // Undo shortcut
   register('z', async () => {
@@ -103,75 +72,25 @@ onMounted(() => {
   register('Cmd+Shift+D', () => toggleTheme());
 
   // Account management shortcut
-  register(
-    'Cmd+,',
-    () => {
-      showAccountManagement.value = true;
-    },
-    { global: true }
-  );
+  register('Cmd+,', () => void router.push('/settings/accounts'), { global: true });
 
   // Help modal shortcut
-  register(
-    '?',
-    () => {
-      helpModalRef.value?.open();
-    },
-    { global: true }
-  );
+  register('?', () => helpModalRef.value?.open(), { global: true });
 });
 </script>
 
 <template>
   <SidebarProvider>
-    <AppSidebar active-route="mail" />
+    <AppSidebar :active-route="route.path" />
 
-    <!-- Full-width compose view -->
+    <!-- Compose overlay (not a route) -->
     <SidebarInset v-if="isComposing">
       <EmailComposer :account-id="1" @close="closeComposer" @sent="handleEmailSent" />
     </SidebarInset>
 
-    <!-- Account Management view -->
-    <SidebarInset v-else-if="showAccountManagement">
-      <AccountManagement @close="showAccountManagement = false" />
-    </SidebarInset>
-
-    <!-- Normal email client layout -->
+    <!-- Router-based views -->
     <SidebarInset v-else>
-      <TopHeader
-        :email-count="messageCount"
-        :last-update-text="lastUpdate"
-        :theme="theme"
-        @toggle-theme="toggleTheme"
-      />
-
-      <FolderNavigation
-        :active-folder="selectedFolder"
-        :inbox-count="messageCount"
-        @compose="openComposer"
-        @select-folder="handleFolderSelect"
-      />
-
-      <div class="flex min-h-0 flex-1 overflow-hidden">
-        <div class="flex w-full flex-col border-r bg-background md:w-[320px]">
-          <div class="border-b px-3 py-2 md:px-4">
-            <SearchBar @results="handleSearchResults" @clear="handleSearchClear" />
-          </div>
-
-          <div class="min-h-0 flex-1 overflow-hidden">
-            <EmailList
-              ref="emailListRef"
-              :folder="selectedFolder"
-              :label-id="selectedLabel ?? undefined"
-              @select-message="handleMessageSelect"
-            />
-          </div>
-        </div>
-
-        <div class="flex min-w-0 flex-1 flex-col bg-background">
-          <EmailReader :message-id="selectedMessageId ?? undefined" @refresh="refreshList" />
-        </div>
-      </div>
+      <RouterView />
     </SidebarInset>
 
     <!-- Global components -->
