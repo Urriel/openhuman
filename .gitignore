@@ -38,6 +38,9 @@ src-tauri/gen/
 # OpenCode ELF
 .opencode/elf
 
+# OpenCode browser profiles
+.opencode/skill/**/profiles/browser-data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
