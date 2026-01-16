@@ -125,3 +125,5 @@ Input those prompts into this chat one-by-one or queue them to run in order.
 
 Progress will be tracked in `agent-os/specs/[this-spec]/tasks.md`
 ```
+
+$ARGUMENTS
